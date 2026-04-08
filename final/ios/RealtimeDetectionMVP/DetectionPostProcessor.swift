@@ -30,22 +30,11 @@ final class DetectionPostProcessor {
         if let rawModelClassCount {
             let channelCount = 4 + rawModelClassCount
             if rawOutput.count % channelCount == 0 && rawOutput.count >= channelCount {
-                let channelMajorDetections = parseUltralyticsChannelMajorOutput(
+                return parseUltralyticsChannelMajorOutput(
                     rawOutput: rawOutput,
                     inputWidth: safeInputWidth,
                     inputHeight: safeInputHeight,
                     rawModelClassCount: rawModelClassCount
-                )
-                let anchorMajorDetections = parseUltralyticsAnchorMajorOutput(
-                    rawOutput: rawOutput,
-                    inputWidth: safeInputWidth,
-                    inputHeight: safeInputHeight,
-                    rawModelClassCount: rawModelClassCount
-                )
-
-                return preferredDetections(
-                    channelMajorDetections,
-                    anchorMajorDetections
                 )
             }
         }
@@ -169,64 +158,6 @@ final class DetectionPostProcessor {
         return applyNMS(to: detections)
     }
 
-    private func parseUltralyticsAnchorMajorOutput(
-        rawOutput: [Float],
-        inputWidth: CGFloat,
-        inputHeight: CGFloat,
-        rawModelClassCount: Int
-    ) -> [Detection] {
-        let channelCount = 4 + rawModelClassCount
-        let classMap = resolvedSourceClassMap(rawModelClassCount: rawModelClassCount)
-        var detections: [Detection] = []
-
-        guard !classMap.isEmpty else { return [] }
-
-        for start in stride(from: 0, to: rawOutput.count, by: channelCount) {
-            guard start + channelCount <= rawOutput.count else { break }
-
-            var bestScore: Float = 0.0
-            var bestLocalClassID: Int?
-
-            for (sourceClassID, localClassID) in classMap {
-                let scoreIndex = start + 4 + sourceClassID
-                guard scoreIndex < rawOutput.count else { continue }
-
-                let score = rawOutput[scoreIndex]
-                if score > bestScore {
-                    bestScore = score
-                    bestLocalClassID = localClassID
-                }
-            }
-
-            guard let localClassID = bestLocalClassID, bestScore >= confidenceThreshold else {
-                continue
-            }
-
-            let rect = normalizedRect(
-                centerX: CGFloat(rawOutput[start]),
-                centerY: CGFloat(rawOutput[start + 1]),
-                width: CGFloat(rawOutput[start + 2]),
-                height: CGFloat(rawOutput[start + 3]),
-                inputWidth: inputWidth,
-                inputHeight: inputHeight
-            )
-
-            guard rect.width > 0.001, rect.height > 0.001 else { continue }
-            guard localClassID >= 0 && localClassID < classNames.count else { continue }
-
-            detections.append(
-                Detection(
-                    rect: rect,
-                    confidence: bestScore,
-                    classID: localClassID,
-                    className: classNames[localClassID]
-                )
-            )
-        }
-
-        return applyNMS(to: detections)
-    }
-
     private func resolvedSourceClassMap(rawModelClassCount: Int) -> [Int: Int] {
         if !sourceClassMap.isEmpty {
             return sourceClassMap
@@ -267,16 +198,6 @@ final class DetectionPostProcessor {
             width: abs(x2 - x1),
             height: abs(y2 - y1)
         ).clampedToUnit()
-    }
-
-    private func preferredDetections(_ lhs: [Detection], _ rhs: [Detection]) -> [Detection] {
-        if lhs.count != rhs.count {
-            return lhs.count > rhs.count ? lhs : rhs
-        }
-
-        let lhsScore = lhs.reduce(Float.zero) { $0 + $1.confidence }
-        let rhsScore = rhs.reduce(Float.zero) { $0 + $1.confidence }
-        return lhsScore >= rhsScore ? lhs : rhs
     }
 
     private func applyNMS(to detections: [Detection]) -> [Detection] {

@@ -135,17 +135,14 @@ final class USBMIDIServoOutput {
                     return MIDIServoError.packetListCreationFailed.osStatus
                 }
 
-                guard let nextPacket = MIDIPacketListAdd(
+                let nextPacket = MIDIPacketListAdd(
                     packetListPointer,
                     rawBuffer.count,
                     packet,
                     0,
                     bytes.count,
                     bytePointer
-                ) else {
-                    return MIDIServoError.packetListCreationFailed.osStatus
-                }
-
+                )
                 packet = nextPacket
                 return noErr
             }

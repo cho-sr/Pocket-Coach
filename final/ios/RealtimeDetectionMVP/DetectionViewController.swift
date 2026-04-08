@@ -7,7 +7,7 @@ final class DetectionViewController: UIViewController {
     private let modelInputSize = 640
     private let cameraService = CameraService()
     private lazy var preprocessor = FramePreprocessor(inputWidth: modelInputSize, inputHeight: modelInputSize)
-    private let postProcessor = DetectionPostProcessor(confidenceThreshold: 0.25, classNames: ["person"], rawModelClassCount: 80, sourceClassMap: [0: 0])
+    private let postProcessor = DetectionPostProcessor(confidenceThreshold: 0.40, classNames: ["person"], rawModelClassCount: 80, sourceClassMap: [0: 0])
     private let tracker = SimpleTracker()
     private let overlayView = OverlayView()
     private let targetSelection = TargetSelectionController()
