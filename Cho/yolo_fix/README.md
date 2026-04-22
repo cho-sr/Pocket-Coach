@@ -49,7 +49,7 @@ Keep the existing app files below:
 Create this folder in the app bundle source directory:
 
 ```text
-Cho/final/ios/RealtimeDetectionMVP/test_images/
+Cho/yolo_fix/yolo_fix/yolo_fix/test_images/
 ```
 
 Then add:
