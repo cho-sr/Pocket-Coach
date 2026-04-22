@@ -1,5 +1,8 @@
 .venv/
 .ultralytics/
+.DS_Store
+.cache/
+.build/
 __pycache__/
 *.pyc
 *.pte
