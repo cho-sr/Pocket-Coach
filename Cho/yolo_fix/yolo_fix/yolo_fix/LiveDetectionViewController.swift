@@ -55,7 +55,7 @@ final class LiveDetectionViewController: UIViewController {
 
     private func setupPipeline() {
         do {
-            pipeline = try DetectorPipeline(configuration: .current640)
+            pipeline = try DetectorPipeline(configuration: .highResolution1024x576)
             statusLabel.text = "Live: ready"
         } catch {
             statusLabel.text = "Model load failed: \(error)"

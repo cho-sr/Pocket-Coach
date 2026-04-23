@@ -14,7 +14,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=str(project_root / "yolo26n.pt"),
         help="Path to a YOLO .pt weights file. Defaults to repo-root yolo26n.pt",
     )
-    parser.add_argument("--imgsz", type=int, default=640, help="Square inference/export image size")
+    parser.add_argument(
+        "--imgsz",
+        type=int,
+        nargs="+",
+        default=[640],
+        metavar=("WIDTH", "HEIGHT"),
+        help="Inference/export image size. Use one value for square, or WIDTH HEIGHT for 16:9, e.g. --imgsz 1024 576.",
+    )
     parser.add_argument("--batch", type=int, default=1, help="Export batch size")
     parser.add_argument(
         "--backend",
@@ -157,15 +164,25 @@ def export_model(args: argparse.Namespace) -> Path:
         )
 
     model = YOLO(args.weights)
+    imgsz = parse_imgsz(args.imgsz)
     exported_dir = Path(
         model.export(
             format="executorch",
-            imgsz=args.imgsz,
+            imgsz=imgsz,
             batch=args.batch,
             device="cpu",
         )
     )
     return exported_dir
+
+
+def parse_imgsz(values: list[int]) -> int | list[int]:
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        width, height = values
+        return [height, width]
+    raise ValueError("--imgsz expects one value, or WIDTH HEIGHT")
 
 
 def copy_bundle_artifacts(exported_dir: Path, bundle_dir: Path, bundle_name: str) -> tuple[Path, Path | None]:

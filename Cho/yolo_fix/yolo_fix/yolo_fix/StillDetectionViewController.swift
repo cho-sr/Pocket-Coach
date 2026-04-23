@@ -74,7 +74,7 @@ final class StillDetectionViewController: UIViewController {
 
     private func setupPipeline() {
         do {
-            pipeline = try DetectorPipeline(configuration: .current640)
+            pipeline = try DetectorPipeline(configuration: .highResolution1024x576)
             statusLabel.text = "\(mode.title): ready"
         } catch {
             statusLabel.text = "Model load failed: \(error)"
