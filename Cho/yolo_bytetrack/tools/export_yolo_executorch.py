@@ -56,12 +56,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default="detector.pte",
         help="Filename to use inside the iOS app bundle",
     )
-    parser.add_argument(
-        "--activation",
-        choices=("original", "relu"),
-        default="original",
-        help="Activation override before export. Use 'relu' to replace torch.nn.SiLU modules with ReLU.",
-    )
     return parser
 
 
@@ -89,7 +83,6 @@ def install_coreml_executorch_exporter(
     compute_unit_name: str,
     target_name: str,
     precision_name: str,
-    metadata_overrides: dict | None = None,
 ) -> None:
     import coremltools as ct
     import torch
@@ -153,8 +146,6 @@ def install_coreml_executorch_exporter(
             exported_metadata["coreml_compute_unit"] = compute_unit_name
             exported_metadata["coreml_target"] = target_name
             exported_metadata["coreml_precision"] = precision_name
-            if metadata_overrides:
-                exported_metadata.update(metadata_overrides)
             YAML.save(output_dir / "metadata.yaml", exported_metadata)
 
         return str(output_dir)
@@ -162,38 +153,17 @@ def install_coreml_executorch_exporter(
     executorch_export.torch2executorch = torch2executorch_coreml
 
 
-def replace_silu_with_relu(model) -> int:
-    import torch
-
-    replacements = 0
-    for child_name, child in model.named_children():
-        if isinstance(child, torch.nn.SiLU):
-            setattr(model, child_name, torch.nn.ReLU(inplace=child.inplace))
-            replacements += 1
-        else:
-            replacements += replace_silu_with_relu(child)
-    return replacements
-
-
 def export_model(args: argparse.Namespace) -> Path:
     from ultralytics import YOLO
-
-    model = YOLO(args.weights)
-    metadata_overrides = {}
-    if args.activation == "relu":
-        replacements = replace_silu_with_relu(model.model)
-        metadata_overrides["activation_override"] = "relu"
-        metadata_overrides["activation_replacements"] = replacements
-        print(f"activation override: replaced {replacements} SiLU modules with ReLU")
 
     if args.backend == "coreml":
         install_coreml_executorch_exporter(
             compute_unit_name=args.coreml_compute_unit,
             target_name=args.coreml_target,
             precision_name=args.coreml_precision,
-            metadata_overrides=metadata_overrides,
         )
 
+    model = YOLO(args.weights)
     imgsz = parse_imgsz(args.imgsz)
     exported_dir = Path(
         model.export(
