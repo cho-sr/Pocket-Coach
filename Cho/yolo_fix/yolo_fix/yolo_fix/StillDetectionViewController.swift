@@ -12,6 +12,7 @@ final class StillDetectionViewController: UIViewController {
     private let controlsStack = UIStackView()
     private let frameQueue = DispatchQueue(label: "app.yolo_fix.still.frame")
     private let inferenceQueue = DispatchQueue(label: "app.yolo_fix.still.inference", qos: .userInitiated)
+    private let displayRotationAngle = CGFloat.pi
 
     private var pipeline: DetectorPipeline?
     private var latestPixelBuffer: CVPixelBuffer?
@@ -61,6 +62,7 @@ final class StillDetectionViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         cameraService.previewLayer.frame = view.bounds
+        applyDisplayCompensation()
         updateCameraOrientation()
     }
 
@@ -68,6 +70,7 @@ final class StillDetectionViewController: UIViewController {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { _ in
             self.cameraService.previewLayer.frame = self.view.bounds
+            self.applyDisplayCompensation()
             self.updateCameraOrientation()
         })
     }
@@ -88,9 +91,11 @@ final class StillDetectionViewController: UIViewController {
         cameraService.previewLayer.frame = view.bounds
         view.layer.insertSublayer(cameraService.previewLayer, at: 0)
         resultView.previewLayer = cameraService.previewLayer
+        applyDisplayCompensation()
     }
 
     private func setupResultView() {
+        resultView.transform = CGAffineTransform(rotationAngle: displayRotationAngle)
         resultView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(resultView)
         NSLayoutConstraint.activate([
@@ -148,6 +153,16 @@ final class StillDetectionViewController: UIViewController {
             return
         }
         cameraService.updateOrientation(interfaceOrientation)
+    }
+
+    private func applyDisplayCompensation() {
+        guard mode == .detect else {
+            resultView.transform = .identity
+            return
+        }
+
+        cameraService.previewLayer.setAffineTransform(CGAffineTransform(rotationAngle: displayRotationAngle))
+        resultView.transform = CGAffineTransform(rotationAngle: displayRotationAngle)
     }
 
     @objc

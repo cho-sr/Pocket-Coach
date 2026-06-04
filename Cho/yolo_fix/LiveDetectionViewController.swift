@@ -16,6 +16,7 @@ final class LiveDetectionViewController: UIViewController {
     private var fpsWindowStart = CACurrentMediaTime()
     private var fpsFrameCount = 0
     private var currentFPS = 0.0
+    private let displayRotationAngle = CGFloat.pi
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,6 +43,7 @@ final class LiveDetectionViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         cameraService.previewLayer.frame = view.bounds
+        applyDisplayCompensation()
         updateCameraOrientation()
     }
 
@@ -49,6 +51,7 @@ final class LiveDetectionViewController: UIViewController {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { _ in
             self.cameraService.previewLayer.frame = self.view.bounds
+            self.applyDisplayCompensation()
             self.updateCameraOrientation()
         })
     }
@@ -68,10 +71,12 @@ final class LiveDetectionViewController: UIViewController {
         cameraService.configureSession()
         cameraService.previewLayer.frame = view.bounds
         view.layer.insertSublayer(cameraService.previewLayer, at: 0)
+        applyDisplayCompensation()
     }
 
     private func setupOverlay() {
         resultView.previewLayer = cameraService.previewLayer
+        resultView.transform = CGAffineTransform(rotationAngle: displayRotationAngle)
         resultView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(resultView)
         NSLayoutConstraint.activate([
@@ -111,6 +116,11 @@ final class LiveDetectionViewController: UIViewController {
             return
         }
         cameraService.updateOrientation(interfaceOrientation)
+    }
+
+    private func applyDisplayCompensation() {
+        cameraService.previewLayer.setAffineTransform(CGAffineTransform(rotationAngle: displayRotationAngle))
+        resultView.transform = CGAffineTransform(rotationAngle: displayRotationAngle)
     }
 
     private func handleFrame(pixelBuffer: CVPixelBuffer, timestamp: CMTime) {
