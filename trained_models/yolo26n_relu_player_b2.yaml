@@ -1,0 +1,33 @@
+model: yolo26n_relu_player_b2
+weights: trained_models/yolo26n_relu_player_b2_best.pt
+base_weights: yolo26n.pt
+task: detect
+classes:
+  - player
+activation_override: relu
+activation_replacements: 105
+training:
+  script: Cho/yolo_fix/tools/finetune_relu_yolo.py
+  data: datasets/football-player-only/data.yaml
+  epochs: 50
+  batch: 2
+  imgsz: 1024
+  device: cuda:0
+  workers: 0
+  source_run: runs/relu_finetune/yolo26n_relu_player_b2
+metrics:
+  final_epoch: 50
+  precision_b: 0.85101
+  recall_b: 0.81501
+  map50_b: 0.87911
+  map50_95_b: 0.495
+  best_map50_epoch: 49
+  best_map50_b: 0.87959
+  best_map50_95_at_best_map50: 0.49289
+  best_map50_95_epoch: 48
+  best_map50_95_b: 0.49576
+dataset:
+  source: martinjolif/football-player-detection
+  source_url: https://huggingface.co/datasets/martinjolif/football-player-detection
+  license: CC BY 4.0
+  transformed: player-only labels, original class 2 remapped to class 0
