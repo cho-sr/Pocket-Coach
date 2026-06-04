@@ -1,0 +1,26 @@
+name: pocket_coach_ui
+description: Shared Flutter UI template for the Pocket Coach on-device tracking app.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  camera: ^0.12.0+1
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/live_preview.jpg
+    - assets/images/session_01.jpg
+    - assets/images/session_02.jpg
