@@ -1,135 +1,58 @@
-# Pocket-Coach
-<p align="center">
-  <img src="images/5조_판넬%20(841%20x%201189%20mm).png" alt="Pocket-Coach 5조판넬" width="900">
-</p>
+# Pocket Coach Workspace
 
-스마트폰으로 촬영한 축구 영상을 기반으로 선수와 공을 추적하고, 경기 이벤트 및 활동량을 분석하여 사용자에게 피드백과 하이라이트 영상을 제공하는 캡스톤 프로젝트입니다.
+이 저장소는 축구 영상 추적과 분석을 위한 여러 프로젝트를 한곳에 모아둔 작업공간입니다.
 
-## Offline Video Tracking Prototype
+## 구성
 
-The offline human and ball tracking prototype created in this iteration now lives in `offline_video_tracking/`.
+- `AutomatedCameraTracking/`: Android 앱과 Arduino 서보 제어를 이용한 자동 카메라 추적
+- `app_flutter/`: Flutter 기반 UI, 카메라 화면, 추적 오버레이, 네이티브 디텍터 브리지
+- `sskit/`: Spiideo SoccerNet SynLoc 개발 키트와 평가 도구
+- `README.md`: 작업공간 전체 안내
 
-- Source code: `offline_video_tracking/`
-- Usage guide: `offline_video_tracking/README.md`
-- Quick run script: `offline_video_tracking/run_soccer_data_1.sh`
+## 이 저장소에서 할 수 있는 일
 
-## Current Development Layout
+- 경기 영상에서 선수와 공을 감지하고 추적
+- 카메라를 자동으로 좌우 조향
+- 모바일 앱에서 추적 상태와 최근 영상을 확인
+- 좌표 변환과 데이터셋 평가 수행
 
-The repository currently has three important development areas:
+## 하위 프로젝트 안내
 
-- `RealtimeDetectionMVP/`
-  - Canonical iOS app project used by Xcode
-  - This is the folder to edit when changing the running iPhone app
-- `ios_mvp/`
-  - Export scripts, model artifacts, setup notes, and MVP documentation
-  - This folder is still used for tooling and docs
-- `ios_mvp/RealtimeDetectionMVP/`
-  - Template / mirror source kept for reference
-  - Not the primary Xcode app source
+### `AutomatedCameraTracking/`
 
-If you are changing the live iOS app, use:
+- Android 코드: `android/app/src/main/java/gr/mybook/lunar_3/`
+- Arduino 서보 제어: `arduino/camera_tracking_servo/camera_tracking_servo.ino`
+- YOLO 모델 내보내기: `export_yolo.py`
+- 모델 파일은 `android/app/src/main/assets/` 아래를 사용
 
-- `RealtimeDetectionMVP/RealtimeDetectionMVP.xcodeproj`
-- `RealtimeDetectionMVP/RealtimeDetectionMVP/`
+### `app_flutter/`
 
-## Overview
+- 메인 진입점: `lib/main.dart`
+- 화면 구성: `lib/screens/`, `lib/widgets/`
+- 네이티브 브리지: `lib/detection/detector_bridge.dart`
 
-아마추어 축구나 조기축구 환경에서는 전문 촬영 장비나 분석 시스템이 부족하여, 자신의 플레이를 객관적으로 기록하고 분석하기 어렵습니다.  
-본 프로젝트는 **스마트폰 영상만으로 선수의 움직임, 공의 흐름, 주요 이벤트를 분석**하고, 이를 바탕으로 **활동 요약, 이동 경로, 하이라이트 클립, LLM 기반 피드백**을 제공하는 시스템을 목표로 합니다.
+실행 예시:
 
-## Motivation
+```bash
+cd app_flutter
+flutter pub get
+flutter run -d chrome
+```
 
-- 아마추어 선수들은 자신의 플레이를 정량적으로 분석하기 어렵습니다.
-- 전문 분석 시스템은 비용이 높고 설치가 복잡합니다.
-- 스마트폰은 접근성이 높아 누구나 쉽게 촬영하고 활용할 수 있습니다.
+### `sskit/`
 
-따라서 본 프로젝트는 **저비용·고접근성 스포츠 분석 시스템**을 구현하여, 일반 사용자도 손쉽게 자신의 경기력을 확인할 수 있도록 하는 것을 목적으로 합니다.
+- Spiideo SoccerNet SynLoc용 개발 키트
+- 좌표계 변환, mAP-LocSim 평가, 예제 데이터 포함
+- 상세 문서: `sskit/README.md`
 
-## System Architecture
+설치 예시:
 
-![System Architecture](./images/architecture.png)
+```bash
+cd sskit
+pip install -e .
+```
 
-위 아키텍처는 전체 시스템 파이프라인을 나타냅니다.
+## 참고
 
-1. **Input**  
-   - 스마트폰으로 축구 경기 영상을 촬영합니다.
-
-2. **Preprocessing**  
-   - 영상 흔들림 보정(Video Stabilization)  
-   - 경기장 영역 추출(Field Cropping)  
-   - 프레임 단위 추출(Frame Extraction)
-
-3. **Player & Ball Tracking**  
-   - 선수 검출(Player Detection)  
-   - 공 검출(Ball Detection)  
-   - 특정 선수 추적(Personal Tracking)
-
-4. **Coordinate Transformation**  
-   - 영상 좌표를 축구장 평면 좌표계로 변환하여 선수 및 공의 위치를 정규화합니다.
-
-5. **Event Detection**  
-   - 패스, 슛, 드리블, 점유 등 주요 이벤트 후보를 탐지합니다.
-
-6. **Performance Analysis**  
-   - 히트맵(Heatmap)  
-   - 이동 경로(Movement Path)  
-   - 활동량 지표(Activity Metrics)
-
-7. **Feedback Generation**  
-   - 분석 결과를 바탕으로 LLM 기반 피드백 생성  
-   - 주요 장면 하이라이트 클립 생성
-
-8. **Results Output**  
-   - 이동 경로 시각화  
-   - 활동 요약 리포트  
-   - 하이라이트 영상 출력
-
-## Key Features
-
-- 스마트폰 영상 기반 축구 분석
-- 선수 및 공 검출/추적
-- 경기장 좌표계 변환
-- 패스/슛/드리블/점유 이벤트 탐지
-- 히트맵 및 이동 경로 시각화
-- 활동량 통계 제공
-- LLM 기반 경기 피드백 생성
-- 하이라이트 클립 자동 생성
-
-## Expected Outputs
-
-- **Movement Path**: 선수 이동 경로 시각화
-- **Activity Summary**: 활동량 및 이벤트 요약
-- **Highlight Clips**: 주요 장면 자동 편집 영상
-- **LLM Feedback**: 플레이 스타일 및 개선점에 대한 자연어 피드백
-
-## Tech Stack
-
-### Vision / Video Processing
-- Python
-- OpenCV
-- YOLO / Object Detection Model
-- Tracking Algorithm (DeepSORT / ByteTrack 등)
-
-### Analysis
-- Coordinate Transformation
-- Event Detection Logic
-- Heatmap / Trajectory Visualization
-
-### AI Feedback
-- LLM 기반 경기 피드백 생성
-
-### Frontend / Output
-- Streamlit / Web Dashboard / Mobile App (예정)
-- Highlight Clip Generation
-
-## Project Workflow
-
-```text
-Smartphone Video
-→ Preprocessing
-→ Player/Ball Detection & Tracking
-→ Coordinate Transformation
-→ Event Detection
-→ Performance Analysis
-→ Feedback Generation
-→ Results Output
+- 영상, 모델, 로그 같은 대용량 파일은 `.gitignore`에 포함되어 있습니다.
+- 각 모듈은 독립적으로 실행하고 테스트하는 것을 권장합니다.
