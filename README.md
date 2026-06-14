@@ -1,4 +1,4 @@
-# Pocket Coach Workspace
+# Pocket Coach
 
 <p align="center">
   <img src="./images/5조_판넬%20(841%20x%201189%20mm).png" alt="Pocket Coach panel" width="900" />
@@ -16,7 +16,7 @@
 
 ## 실행 흐름
 
-```mermaid
+```
 flowchart TD
     A[사용자] --> B[Flutter 홈 화면]
     B --> C[Start Tracking]
